@@ -35,6 +35,14 @@ module Frameit
         return 'iPad Pro'
       when sizes::MAC
         return 'MacBook'
+      when sizes::ANDROID_NEXUS_6P
+        return 'Nexus_6P'
+      when sizes::ANDROID_NEXUS_7
+        return 'Nexus_7'
+      when sizes::ANDROID_NEXUS_9
+        return 'Nexus_9'
+      when sizes::ANDROID_NEXUS_10
+        return 'Nexus_10'
       else
         UI.error "Unknown device type for size #{@screen_size} for path '#{path}'"
       end

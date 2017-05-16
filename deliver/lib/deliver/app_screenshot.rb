@@ -33,6 +33,14 @@ module Deliver
       MAC = "Mac"
       # Apple TV
       APPLE_TV = "Apple-TV"
+      # Android Nexus 6P
+      ANDROID_NEXUS_6P = "Android-Nexus-6P"
+      # Android Nexus 7
+      ANDROID_NEXUS_7 = "Android-Nexus-7"
+      # Android Nexus 9
+      ANDROID_NEXUS_9 = "Android-Nexus-9"
+      # Android Nexus 10
+      ANDROID_NEXUS_10 = "Android-Nexus-10"
     end
 
     # @return [Deliver::ScreenSize] the screen size (device type)
@@ -73,7 +81,11 @@ module Deliver
         ScreenSize::IOS_IPAD_PRO_MESSAGES => "ipadPro",
         ScreenSize::MAC => "desktop",
         ScreenSize::IOS_APPLE_WATCH => "watch",
-        ScreenSize::APPLE_TV => "appleTV"
+        ScreenSize::APPLE_TV => "appleTV",
+        ScreenSize::ANDROID_NEXUS_6P => "Nexus 6P",
+        ScreenSize::ANDROID_NEXUS_7 => "Nexus 7",
+        ScreenSize::ANDROID_NEXUS_9 => "Nexus 9",
+        ScreenSize::ANDROID_NEXUS_10 => "Nexus 10"
       }
       return matching[self.screen_size]
     end
@@ -185,6 +197,22 @@ module Deliver
         ],
         ScreenSize::APPLE_TV => [
           [1920, 1080]
+        ],
+        ScreenSize::ANDROID_NEXUS_6P => [
+          [1440, 2560],
+          [2560, 1440]
+        ],
+        ScreenSize::ANDROID_NEXUS_7 => [
+          [1200, 1920],
+          [1920, 1200]
+        ],
+        ScreenSize::ANDROID_NEXUS_9 => [
+          [1536, 2048],
+          [2048, 1536]
+        ],
+        ScreenSize::ANDROID_NEXUS_10 => [
+          [1600, 2560],
+          [2560, 1600]
         ]
       }
     end
