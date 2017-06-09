@@ -57,7 +57,8 @@ module Pilot
       app = find_app(app_filter: config[:apple_id] || config[:app_identifier])
       unless app
         tester.delete!
-        UI.success("Successfully removed tester #{tester.email}")
+        UI.success("Successfully removed tester #{tester.email} from Users and Roles")
+        return
       end
 
       begin
@@ -175,7 +176,7 @@ module Pilot
 
     def list_global(all_testers, title)
       headers = ["First", "Last", "Email", "Groups", "Devices", "Latest Version", "Latest Install Date"]
-      list(all_testers, title, headers) do |tester|
+      list(all_testers, "#{title} (#{all_testers.count})", headers) do |tester|
         [
           tester.first_name,
           tester.last_name,
@@ -190,7 +191,7 @@ module Pilot
 
     def list_by_app(all_testers, title)
       headers = ["First", "Last", "Email", "Groups"]
-      list(all_testers, title, headers) do |tester|
+      list(all_testers, "#{title} (#{all_testers.count})", headers) do |tester|
         [
           tester.first_name,
           tester.last_name,

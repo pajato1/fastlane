@@ -80,6 +80,14 @@ describe Pilot::TesterManager do
       })
     end
 
+    let(:remove_tester_options) do
+      FastlaneCore::Configuration.create(Pilot::Options.available_options, {
+        email: fake_tester.email,
+        first_name: fake_tester.first_name,
+        last_name: fake_tester.last_name
+      })
+    end
+
     let(:default_add_tester_options_with_group) do
       FastlaneCore::Configuration.create(Pilot::Options.available_options, {
         apple_id: 'com.whatever',
@@ -123,10 +131,10 @@ describe Pilot::TesterManager do
           ]
         end
 
-        expect(Terminal::Table).to receive(:new).with(title: "Internal Testers".green,
+        expect(Terminal::Table).to receive(:new).with(title: "Internal Testers (2)".green,
                                                    headings: headings,
                                                        rows: rows)
-        expect(Terminal::Table).to receive(:new).with(title: "External Testers".green,
+        expect(Terminal::Table).to receive(:new).with(title: "External Testers (2)".green,
                                                    headings: headings,
                                                        rows: rows)
 
@@ -144,10 +152,10 @@ describe Pilot::TesterManager do
           [tester.first_name, tester.last_name, tester.email, tester.group_names]
         end
 
-        expect(Terminal::Table).to receive(:new).with(title: "Internal Testers".green,
+        expect(Terminal::Table).to receive(:new).with(title: "Internal Testers (2)".green,
                                                    headings: headings,
                                                        rows: rows)
-        expect(Terminal::Table).to receive(:new).with(title: "External Testers".green,
+        expect(Terminal::Table).to receive(:new).with(title: "External Testers (2)".green,
                                                    headings: headings,
                                                        rows: rows)
 
@@ -246,6 +254,20 @@ describe Pilot::TesterManager do
         expect(FastlaneCore::UI).to receive(:success).with('Successfully added tester to group(s): Test Group in app: My Fake App')
 
         tester_manager.add_tester(default_add_tester_options_with_group)
+      end
+    end
+
+    describe "when external tester is removed without providing app" do
+      it "removes the tester without error" do
+        allow(current_user).to receive(:roles).and_return(["admin"])
+        allow(Spaceship::Application).to receive(:find).and_return(nil)
+        allow(tester_manager).to receive(:find_app).and_return(nil)
+
+        expect(Spaceship::Tunes::Tester::External).to receive(:find).and_return(fake_tester)
+        expect(Spaceship::TestFlight::Group).to_not receive(:remove_tester_from_groups!)
+        expect(FastlaneCore::UI).to receive(:success).with('Successfully removed tester fabric-devtools@gmail.com+fake@gmail.com from Users and Roles')
+
+        tester_manager.remove_tester(remove_tester_options)
       end
     end
   end

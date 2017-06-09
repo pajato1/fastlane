@@ -27,11 +27,12 @@ module Spaceship::TestFlight
       handle_response(response)
     end
 
-    def get_builds_for_train(app_id: nil, platform: "ios", train_version: nil)
+    def get_builds_for_train(app_id: nil, platform: "ios", train_version: nil, retry_count: 0)
       assert_required_params(__method__, binding)
-
-      response = request(:get, "providers/#{team_id}/apps/#{app_id}/platforms/#{platform}/trains/#{train_version}/builds")
-      handle_response(response)
+      with_retry(retry_count: retry_count) do
+        response = request(:get, "providers/#{team_id}/apps/#{app_id}/platforms/#{platform}/trains/#{train_version}/builds")
+        handle_response(response)
+      end
     end
 
     ##
@@ -111,6 +112,13 @@ module Spaceship::TestFlight
       handle_response(response)
     end
 
+    def resend_invite_to_external_tester(app_id: nil, tester_id: nil)
+      assert_required_params(__method__, binding)
+      url = "/testflight/v1/invites/#{app_id}/resend?testerId=#{tester_id}"
+      response = request(:post, url)
+      handle_response(response)
+    end
+
     def create_app_level_tester(app_id: nil, first_name: nil, last_name: nil, email: nil)
       assert_required_params(__method__, binding)
       url = "providers/#{team_id}/apps/#{app_id}/testers"
@@ -182,6 +190,8 @@ module Spaceship::TestFlight
       if (200...300).cover?(response.status) && (response.body.nil? || response.body.empty?)
         return
       end
+
+      raise InternalServerError, "Server error got #{response.status}" if (500...600).cover?(response.status)
 
       unless response.body.kind_of?(Hash)
         raise UnexpectedResponse, response.body

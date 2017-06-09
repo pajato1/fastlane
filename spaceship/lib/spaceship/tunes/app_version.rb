@@ -152,6 +152,9 @@ module Spaceship
       # @return (Hash) A hash representing the keywords in all languages
       attr_reader :keywords
 
+      # @return (Hash) A hash representing the promotionalText in all languages
+      attr_reader :promotional_text
+
       # @return (Hash) A hash representing the description in all languages
       attr_reader :description
 
@@ -563,7 +566,8 @@ module Spaceship
           description: :description,
           supportUrl: :support_url,
           marketingUrl: :marketing_url,
-          releaseNotes: :release_notes
+          releaseNotes: :release_notes,
+          promotionalText: :promotional_text
         }.each do |json, attribute|
           instance_variable_set("@#{attribute}".to_sym, LanguageItem.new(json, languages))
         end
@@ -811,7 +815,9 @@ module Spaceship
         result = []
 
         display_families.each do |display_family|
-          trailer_data = display_family.fetch("trailer", {}).fetch("value")
+          trailer_raw = display_family["trailer"]
+          next if trailer_raw.nil?
+          trailer_data = trailer_raw["value"]
           next if trailer_data.nil?
           data = {
             device_type: display_family['name'],

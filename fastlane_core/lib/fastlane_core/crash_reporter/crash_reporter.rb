@@ -6,7 +6,7 @@ module FastlaneCore
     class << self
       @did_report_crash = false
 
-      @explitly_enabled_for_testing = false
+      @explicitly_enabled_for_testing = false
 
       def crash_report_path
         File.join(FastlaneCore.fastlane_user_dir, 'latest_crash.json')
@@ -16,20 +16,27 @@ module FastlaneCore
         !FastlaneCore::Env.truthy?("FASTLANE_OPT_OUT_CRASH_REPORTING")
       end
 
-      def report_crash(type: :unknown, exception: nil, action: nil)
+      def report_crash(exception: nil, action: nil)
         return unless enabled?
         return if @did_report_crash
+        return if exception.fastlane_crash_came_from_custom_action?
 
         # Do not run the crash reporter while tests are happening (it might try to send
-        # a crash report), unless we have explictly turned on the crash reporter because
+        # a crash report), unless we have explicitly turned on the crash reporter because
         # we want to test it
-        return if Helper.test? && !@explitly_enabled_for_testing
-
-        payload = CrashReportGenerator.generate(type: type, exception: exception, action: action)
-        send_report(payload: payload)
-        save_file(payload: payload)
-        show_message unless did_show_message?
-        @did_report_crash = true
+        return if Helper.test? && !@explicitly_enabled_for_testing
+        begin
+          payload = CrashReportGenerator.generate(exception: exception, action: action)
+          send_report(payload: payload)
+          save_file(payload: payload)
+          show_message unless did_show_message?
+          @did_report_crash = true
+        rescue
+          if FastlaneCore::Globals.verbose?
+            UI.error("Unable to send the crash report.")
+            UI.error("Please open an issue on GitHub if you need help!")
+          end
+        end
       end
 
       def reset_crash_reporter_for_testing
@@ -37,11 +44,11 @@ module FastlaneCore
       end
 
       def enable_for_testing
-        @explitly_enabled_for_testing = true
+        @explicitly_enabled_for_testing = true
       end
 
       def disable_for_testing
-        @explitly_enabled_for_testing = false
+        @explicitly_enabled_for_testing = false
       end
 
       private
@@ -62,7 +69,14 @@ module FastlaneCore
 
         return did_show if did_show
 
-        File.write(path, '1')
+        begin
+          File.write(path, '1')
+        rescue
+          if FastlaneCore::Globals.verbose?
+            UI.error("Cannot write out file indicating that crash report announcement has been displayed.")
+            UI.error("The following message will be displayed on the next crash as well:")
+          end
+        end
         false
       end
 
