@@ -19,6 +19,10 @@ module Frameit
 
     # Device name for a given screen size. Used to use the correct template
     def device_name
+      if ENV["FRAMEIT_FORCE_DEVICE_NAME"]
+        return ENV["FRAMEIT_FORCE_DEVICE_NAME"]
+      end
+
       sizes = Deliver::AppScreenshot::ScreenSize
       case @screen_size
       when sizes::IOS_55
@@ -35,6 +39,8 @@ module Frameit
         return 'iPad Pro'
       when sizes::MAC
         return 'MacBook'
+      when sizes::ANDROID_GALAXY_S6
+        return 'Galaxy_S6'
       when sizes::ANDROID_NEXUS_6P
         return 'Nexus_6P'
       when sizes::ANDROID_NEXUS_7
@@ -43,6 +49,10 @@ module Frameit
         return 'Nexus_9'
       when sizes::ANDROID_NEXUS_10
         return 'Nexus_10'
+      when sizes::ANDROID_GALAXY_S6
+        return 'Galaxy_S6'
+      when sizes::ANDROID_GALAXY_S7
+        return 'Galaxy_S7'
       else
         UI.error "Unknown device type for size #{@screen_size} for path '#{path}'"
       end
