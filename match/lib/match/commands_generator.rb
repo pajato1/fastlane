@@ -1,4 +1,5 @@
 require 'commander'
+require 'fastlane_core'
 require 'fastlane/version'
 
 HighLine.track_eof = false
@@ -60,7 +61,7 @@ module Match
         c.syntax = 'fastlane match init'
         c.description = 'Create the Matchfile for you'
         c.action do |args, options|
-          containing = (File.directory?("fastlane") ? 'fastlane' : '.')
+          containing = FastlaneCore::Helper.fastlane_enabled_folder_path
           path = File.join(containing, "Matchfile")
 
           if File.exist?(path)
@@ -109,7 +110,7 @@ module Match
         c.syntax = "fastlane match nuke"
         c.description = "Delete all certificates and provisioning profiles from the Apple Dev Portal"
         c.action do |args, options|
-          FastlaneCore::UI.user_error!("Please run `fastlane match nuke [type], allowed values: distribution, enterprise and development. For the 'adhoc' type, please use 'distribution' instead.")
+          FastlaneCore::UI.user_error!("Please run `fastlane match nuke [type], allowed values: distribution and development. For the 'adhoc' type, please use 'distribution' instead.")
         end
       end
 

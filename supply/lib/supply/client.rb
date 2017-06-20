@@ -70,7 +70,6 @@ module Supply
       Google::Apis::ClientOptions.default.application_version = Fastlane::VERSION
       Google::Apis::ClientOptions.default.read_timeout_sec = 300
       Google::Apis::ClientOptions.default.open_timeout_sec = 300
-      Google::Apis::ClientOptions.default.send_timeout_sec = 300
       Google::Apis::RequestOptions.default.retries = 5
 
       self.android_publisher = Androidpublisher::AndroidPublisherService.new
@@ -131,7 +130,7 @@ module Supply
     def listings
       ensure_active_edit!
 
-      result = call_google_api { android_publisher.list_listings(current_package_name, current_edit.id) }
+      result = call_google_api { android_publisher.list_edit_listings(current_package_name, current_edit.id) }
 
       return result.listings.map do |row|
         Listing.new(self, row.language, row)
@@ -143,7 +142,7 @@ module Supply
       ensure_active_edit!
 
       begin
-        result = android_publisher.get_listing(
+        result = android_publisher.get_edit_listing(
           current_package_name,
           current_edit.id,
           language
@@ -160,7 +159,7 @@ module Supply
     def apks_version_codes
       ensure_active_edit!
 
-      result = call_google_api { android_publisher.list_apks(current_package_name, current_edit.id) }
+      result = call_google_api { android_publisher.list_edit_apks(current_package_name, current_edit.id) }
 
       return result.apks.map(&:version_code)
     end
@@ -170,7 +169,7 @@ module Supply
       ensure_active_edit!
 
       result = call_google_api do
-        android_publisher.list_apk_listings(
+        android_publisher.list_edit_apklistings(
           current_package_name,
           current_edit.id,
           apk_version_code
@@ -199,7 +198,7 @@ module Supply
       })
 
       call_google_api do
-        android_publisher.update_listing(
+        android_publisher.update_edit_listing(
           current_package_name,
           current_edit.id,
           language,
@@ -212,7 +211,7 @@ module Supply
       ensure_active_edit!
 
       result_upload = call_google_api do
-        android_publisher.upload_apk(
+        android_publisher.upload_edit_apk(
           current_package_name,
           current_edit.id,
           upload_source: path_to_apk
@@ -250,7 +249,7 @@ module Supply
       })
 
       call_google_api do
-        android_publisher.update_track(
+        android_publisher.update_edit_track(
           current_package_name,
           current_edit.id,
           track,
@@ -264,7 +263,7 @@ module Supply
       ensure_active_edit!
 
       begin
-        result = android_publisher.get_track(
+        result = android_publisher.get_edit_track(
           current_package_name,
           current_edit.id,
           track
@@ -285,7 +284,7 @@ module Supply
       })
 
       call_google_api do
-        android_publisher.update_apk_listing(
+        android_publisher.update_edit_apklisting(
           current_package_name,
           current_edit.id,
           apk_listing.apk_version_code,
@@ -303,7 +302,7 @@ module Supply
       ensure_active_edit!
 
       result = call_google_api do
-        android_publisher.list_images(
+        android_publisher.list_edit_images(
           current_package_name,
           current_edit.id,
           language,
@@ -319,7 +318,7 @@ module Supply
       ensure_active_edit!
 
       call_google_api do
-        android_publisher.upload_image(
+        android_publisher.upload_edit_image(
           current_package_name,
           current_edit.id,
           language,
@@ -334,7 +333,7 @@ module Supply
       ensure_active_edit!
 
       call_google_api do
-        android_publisher.delete_all_images(
+        android_publisher.deleteall_edit_image(
           current_package_name,
           current_edit.id,
           language,
@@ -347,7 +346,7 @@ module Supply
       ensure_active_edit!
 
       call_google_api do
-        android_publisher.upload_expansion_file(
+        android_publisher.upload_edit_expansionfile(
           current_package_name,
           current_edit.id,
           apk_version_code,

@@ -160,6 +160,17 @@ description({
 ##### name
 The title/name of the app
 
+##### subtitle
+
+Localised subtitle of the app
+
+```ruby
+subtitle(
+  "en-US" => "Awesome English subtitle here",
+  "de-DE" => "Jetzt mit deutschen Untertiteln!"
+)
+```
+
 ##### description
 The description of the app
 
@@ -201,6 +212,21 @@ A path to a new app icon for the  Watch, which must be exactly 1024x1024px
 ```ruby
 apple_watch_app_icon './AppleWatchAppIcon.png'
 ```
+
+##### platform
+
+The platform of your application (a.e. ios, osx). 
+
+This option is optional. The default value is "ios" and deliver should be able to figure out the platform from your binary.
+
+However, in the case if multiple binaries present, you can specify a platform which you want to deliver explicitly.
+
+The available options: 
+
+- 'ios'
+- 'appletvos'
+- 'osx'
+
 
 ### Non-Localised
 
