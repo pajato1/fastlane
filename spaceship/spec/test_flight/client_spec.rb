@@ -102,6 +102,15 @@ describe Spaceship::TestFlight::Client do
     end
   end
 
+  context '#expire_build' do
+    let(:build) { double('Build', to_json: "") }
+    it 'executes the request' do
+      MockAPI::TestFlightServer.post('/testflight/v2/providers/fake-team-id/apps/some-app-id/builds/1/expire') {}
+      subject.expire_build(app_id: app_id, build_id: 1, build: build)
+      expect(WebMock).to have_requested(:post, 'https://itunesconnect.apple.com/testflight/v2/providers/fake-team-id/apps/some-app-id/builds/1/expire')
+    end
+  end
+
   ##
   # @!group Groups API
   ##
@@ -130,7 +139,15 @@ describe Spaceship::TestFlight::Client do
     it 'executes the request' do
       MockAPI::TestFlightServer.get('/testflight/v2/providers/fake-team-id/apps/some-app-id/testers') {}
       subject.testers_for_app(app_id: app_id)
-      expect(WebMock).to have_requested(:get, 'https://itunesconnect.apple.com/testflight/v2/providers/fake-team-id/apps/some-app-id/testers?limit=10000')
+      expect(WebMock).to have_requested(:get, 'https://itunesconnect.apple.com/testflight/v2/providers/fake-team-id/apps/some-app-id/testers?limit=40&order=asc&sort=email')
+    end
+  end
+
+  context '#search_for_tester_in_app' do
+    it 'executes the request' do
+      MockAPI::TestFlightServer.get('/testflight/v2/providers/fake-team-id/apps/some-app-id/testers') {}
+      subject.search_for_tester_in_app(app_id: app_id, text: "fake+tester+text")
+      expect(WebMock).to have_requested(:get, 'https://itunesconnect.apple.com/testflight/v2/providers/fake-team-id/apps/some-app-id/testers?order=asc&search=fake%2Btester%2Btext&sort=status')
     end
   end
 
