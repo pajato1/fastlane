@@ -36,6 +36,7 @@ module Fastlane
         flags = []
         flags << "-p #{project_dir.shellescape}"
         flags << params[:properties].map { |k, v| "-P#{k.to_s.shellescape}=#{v.to_s.shellescape}" }.join(' ') unless params[:properties].nil?
+        flags << params[:system_properties].map { |k, v| "-D#{k.to_s.shellescape}=#{v.to_s.shellescape}" }.join(' ') unless params[:system_properties].nil?
         flags << params[:flags] unless params[:flags].nil?
 
         # Run the actual gradle task
@@ -112,7 +113,7 @@ module Fastlane
                                        is_string: true),
           FastlaneCore::ConfigItem.new(key: :project_dir,
                                        env_name: 'FL_GRADLE_PROJECT_DIR',
-                                       description: 'The root directory of the gradle project. Defaults to `.`',
+                                       description: 'The root directory of the gradle project',
                                        default_value: '.',
                                        is_string: true),
           FastlaneCore::ConfigItem.new(key: :gradle_path,
@@ -123,6 +124,11 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :properties,
                                        env_name: 'FL_GRADLE_PROPERTIES',
                                        description: 'Gradle properties to be exposed to the gradle script',
+                                       optional: true,
+                                       is_string: false),
+          FastlaneCore::ConfigItem.new(key: :system_properties,
+                                       env_name: 'FL_GRADLE_SYSTEM_PROPERTIES',
+                                       description: 'Gradle system properties to be exposed to the gradle script',
                                        optional: true,
                                        is_string: false),
           FastlaneCore::ConfigItem.new(key: :serial,
@@ -179,8 +185,23 @@ module Fastlane
               "versionName" => "1.0.0",
               # ...
             }
+          )
+          ```
+
+          You can use this to automatically [sign and zipalign](https://developer.android.com/studio/publish/app-signing.html) your app:
+          ```ruby
+          gradle(
+            task: "assemble",
+            build_type: "Release",
+            print_command: false,
+            properties: {
+              "android.injected.signing.store.file" => "keystore.jks",
+              "android.injected.signing.store.password" => "store_password",
+              "android.injected.signing.key.alias" => "key_alias",
+              "android.injected.signing.key.password" => "key_password",
+            }
           )',
-          '# If you need to pass sensitive information through the `gradle` action, and don"t want the generated command to be printed before it is run, you can suppress that:
+          '# If you need to pass sensitive information through the `gradle` action, and don\'t want the generated command to be printed before it is run, you can suppress that:
           gradle(
             # ...
             print_command: false

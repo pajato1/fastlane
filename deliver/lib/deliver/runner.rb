@@ -1,4 +1,17 @@
-require 'precheck'
+require 'precheck/options'
+require 'precheck/runner'
+require 'fastlane_core/configuration/configuration'
+require 'fastlane_core/ipa_upload_package_builder'
+require 'fastlane_core/pkg_upload_package_builder'
+require 'fastlane_core/itunes_transporter'
+require 'spaceship'
+require_relative 'html_generator'
+require_relative 'submit_for_review'
+require_relative 'upload_assets'
+require_relative 'upload_price_tier'
+require_relative 'upload_metadata'
+require_relative 'upload_screenshots'
+require_relative 'detect_values'
 
 module Deliver
   class Runner
@@ -31,8 +44,9 @@ module Deliver
 
       UI.success("Finished the upload to iTunes Connect") unless options[:skip_binary_upload]
 
-      precheck_success = precheck_app
+      reject_version_if_possible if options[:reject_if_possible]
 
+      precheck_success = precheck_app
       submit_for_review if options[:submit_for_review] && precheck_success
     end
 
@@ -49,6 +63,7 @@ module Deliver
 
       precheck_options = {
         default_rule_level: options[:precheck_default_rule_level],
+        include_in_app_purchases: options[:precheck_include_in_app_purchases],
         app_identifier: options[:app_identifier],
         username: options[:username]
       }
@@ -63,9 +78,6 @@ module Deliver
         UI.error("fastlane precheck just tried to inspect your app's metadata for App Store guideline violations and ran into a problem. We're not sure what the problem was, but precheck failed to finished. You can run it in verbose mode if you want to see the whole error. We'll have a fix out soon 🚀")
         UI.verbose(ex.inspect)
         UI.verbose(ex.backtrace.join("\n"))
-
-        # always report this back, since this is a new tool, we don't want to crash, but we still want to see this
-        FastlaneCore::CrashReporter.report_crash(exception: ex)
       end
 
       return precheck_success
@@ -147,6 +159,13 @@ module Deliver
       transporter = FastlaneCore::ItunesTransporter.new(options[:username], nil, false, options[:itc_provider])
       result = transporter.upload(options[:app].apple_id, package_path)
       UI.user_error!("Could not upload binary to iTunes Connect. Check out the error above", show_github_issues: true) unless result
+    end
+
+    def reject_version_if_possible
+      app = options[:app]
+      if app.reject_version_if_possible!
+        UI.success("Successfully rejected previous version!")
+      end
     end
 
     def submit_for_review

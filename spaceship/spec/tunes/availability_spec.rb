@@ -24,7 +24,7 @@ describe Spaceship::Tunes::Availability do
       expect(availability.territories.length).to eq(2)
       territory_0 = availability.territories[0]
 
-      expect(territory_0).not_to be_nil
+      expect(territory_0).not_to(be_nil)
       expect(territory_0.code).to eq('GB')
       expect(territory_0.currency_code).to eq('GBP')
       expect(territory_0.name).to eq('United Kingdom')
@@ -67,6 +67,28 @@ describe Spaceship::Tunes::Availability do
 
         expect(availability.territories.length).to eq(1)
         expect(availability.territories[0].code).to eq("US")
+      end
+
+      it "correctly sets preorder with no app available date" do
+        TunesStubbing.itc_stub_set_preorder_cleared
+
+        # sets cleared for preorder to true
+        availability = Spaceship::Tunes::Availability.from_territories(["US"], cleared_for_preorder: true)
+        availability = client.update_availability!(app.apple_id, availability)
+
+        expect(availability.cleared_for_preorder).to eq(true)
+        expect(availability.app_available_date).to eq(nil)
+      end
+
+      it "correctly sets preorder with app available date" do
+        TunesStubbing.itc_stub_set_preorder_cleared_with_date
+
+        # sets cleared for preorder to true
+        availability = Spaceship::Tunes::Availability.from_territories(["US"], cleared_for_preorder: true, app_available_date: "2020-02-20")
+        availability = client.update_availability!(app.apple_id, availability)
+
+        expect(availability.cleared_for_preorder).to eq(true)
+        expect(availability.app_available_date).to eq("2020-02-20")
       end
     end
 

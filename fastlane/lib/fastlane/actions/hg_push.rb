@@ -8,7 +8,7 @@ module Fastlane
         command << '--force' if params[:force]
         command << params[:destination] unless params[:destination].empty?
 
-        return command.join(' ') if Helper.is_test?
+        return command.join(' ') if Helper.test?
 
         Actions.sh(command.join(' '))
         UI.success('Successfully pushed changes to remote 🚀.')
@@ -26,7 +26,7 @@ module Fastlane
         [
           FastlaneCore::ConfigItem.new(key: :force,
                                        env_name: "FL_HG_PUSH_FORCE",
-                                       description: "Force push to remote. Defaults to false",
+                                       description: "Force push to remote",
                                        is_string: false,
                                        default_value: false),
           FastlaneCore::ConfigItem.new(key: :destination,

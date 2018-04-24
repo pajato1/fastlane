@@ -1,3 +1,5 @@
+require_relative 'module'
+
 module Deliver
   class SubmitForReview
     def submit!(options)
@@ -31,7 +33,7 @@ module Deliver
       app = options[:app]
       v = app.edit_version
 
-      if options[:build_number] and options[:build_number] != "latest"
+      if options[:build_number] && options[:build_number] != "latest"
         UI.message("Selecting existing build-number: #{options[:build_number]}")
         build = v.candidate_builds.detect { |a| a.build_version == options[:build_number] }
         unless build
@@ -63,7 +65,7 @@ module Deliver
           UI.message("")
           UI.message("You can tweet: \"iTunes Connect #iosprocessingtime #{((Time.now - start) / 60).round} minutes\"")
         end
-        sleep 30
+        sleep(30)
       end
       nil
     end

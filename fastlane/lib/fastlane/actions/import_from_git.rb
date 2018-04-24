@@ -32,6 +32,10 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :path,
                                        description: "The path of the Fastfile in the repository",
                                        default_value: 'fastlane/Fastfile',
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :version,
+                                       description: "The version to checkout on the respository. Optimistic match operator or multiple conditions can be used to select the latest version within constraints",
+                                       default_value: nil,
                                        optional: true)
         ]
       end
@@ -48,8 +52,15 @@ module Fastlane
         [
           'import_from_git(
             url: "git@github.com:fastlane/fastlane.git", # The URL of the repository to import the Fastfile from.
-            branch: "HEAD", # The branch to checkout on the repository. Defaults to `HEAD`.
-            path: "fastlane/Fastfile" # The path of the Fastfile in the repository. Defaults to `fastlane/Fastfile`.
+            branch: "HEAD", # The branch to checkout on the repository
+            path: "fastlane/Fastfile", # The path of the Fastfile in the repository
+            version: "~> 1.0.0" # The version to checkout on the repository. Optimistic match operator can be used to select the latest version within constraints.
+          )',
+          'import_from_git(
+            url: "git@github.com:fastlane/fastlane.git", # The URL of the repository to import the Fastfile from.
+            branch: "HEAD", # The branch to checkout on the repository
+            path: "fastlane/Fastfile", # The path of the Fastfile in the repository
+            version: [">= 1.1.0", "< 2.0.0"] # The version to checkout on the repository. Multiple conditions can be used to select the latest version within constraints.
           )'
         ]
       end

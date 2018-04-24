@@ -6,7 +6,8 @@ describe Spaceship::TestFlight::Build do
 
   before do
     # Use a simple client for all data models
-    Spaceship::TestFlight::Base.client = mock_client
+    allow(Spaceship::TestFlight::Base).to receive(:client).and_return(mock_client)
+    allow(mock_client).to receive(:team_id).and_return('')
   end
 
   context '.find' do
@@ -131,7 +132,13 @@ describe Spaceship::TestFlight::Build do
               feedbackEmail: 'email@example.com',
               whatsNew: 'this is new!'
             }
-          ]
+          ],
+          dSYMUrl: 'https://some_dsym_url.com',
+          includesSymbols: false,
+          buildSdk: '13A340',
+          fileName: 'AppName.ipa',
+          containsODR: false,
+          numberOfAssetPacks: 1
         }
       end
     end
@@ -217,6 +224,24 @@ describe Spaceship::TestFlight::Build do
         end
         expect(build).to be_processed
       end
+
+      it 'is processed on review rejected' do
+        mock_client_response(:get_build) do
+          {
+            'externalState' => 'testflight.build.state.review.rejected'
+          }
+        end
+        expect(build).to be_processed
+      end
+
+      it "access build details and dSYM URL" do
+        expect(build.dsym_url).to eq("https://some_dsym_url.com")
+        expect(build.include_symbols).to eq(false)
+        expect(build.number_of_asset_packs).to eq(1)
+        expect(build.contains_odr).to eq(false)
+        expect(build.build_sdk).to eq("13A340")
+        expect(build.file_name).to eq("AppName.ipa")
+      end
     end
 
     context '#upload_date' do
@@ -249,7 +274,7 @@ describe Spaceship::TestFlight::Build do
       end
     end
 
-    RSpec::Matchers.define :same_test_info do |other_test_info|
+    RSpec::Matchers.define(:same_test_info) do |other_test_info|
       match do |args|
         args[:build].test_info.to_s == other_test_info.to_s
       end

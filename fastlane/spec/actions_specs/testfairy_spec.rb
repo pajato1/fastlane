@@ -51,7 +51,7 @@ describe Fastlane do
               api_key: 'thisistest',
             })
           end").runner.execute(:test)
-        end.not_to raise_error
+        end.not_to(raise_error)
       end
 
       it "works with valid optional parameters" do
@@ -61,11 +61,12 @@ describe Fastlane do
             testfairy({
               ipa: './fastlane/spec/fixtures/fastfiles/Fastfile1',
               api_key: 'thisistest',
+              upload_url: 'https://your-subdomain.testfairy.com',
               comment: 'Test Comment!',
               testers_groups: ['group1', 'group2']
             })
           end").runner.execute(:test)
-        end.not_to raise_error
+        end.not_to(raise_error)
       end
     end
   end

@@ -1,3 +1,5 @@
+require_relative 'xcpretty_reporter_options_generator'
+
 module Scan
   # Responsible for building the fully working xcodebuild command
   class TestCommandGenerator
@@ -38,7 +40,6 @@ module Scan
       options << "-enableCodeCoverage #{config[:code_coverage] ? 'YES' : 'NO'}" unless config[:code_coverage].nil?
       options << "-enableAddressSanitizer #{config[:address_sanitizer] ? 'YES' : 'NO'}" unless config[:address_sanitizer].nil?
       options << "-enableThreadSanitizer #{config[:thread_sanitizer] ? 'YES' : 'NO'}" unless config[:thread_sanitizer].nil?
-      options << "-xcconfig '#{config[:xcconfig]}'" if config[:xcconfig]
       options << "-xctestrun '#{config[:xctestrun]}'" if config[:xctestrun]
       options << config[:xcargs] if config[:xcargs]
 
@@ -132,14 +133,18 @@ module Scan
         day = Time.now.strftime("%F") # e.g. 2015-08-07
 
         Scan.cache[:build_path] = File.expand_path("~/Library/Developer/Xcode/Archives/#{day}/")
-        FileUtils.mkdir_p Scan.cache[:build_path]
+        FileUtils.mkdir_p(Scan.cache[:build_path])
       end
       Scan.cache[:build_path]
     end
 
     def result_bundle_path
       unless Scan.cache[:result_bundle_path]
-        Scan.cache[:result_bundle_path] = File.join(Scan.config[:output_directory], Scan.config[:scheme]) + ".test_result"
+        path = File.join(Scan.config[:output_directory], Scan.config[:scheme]) + ".test_result"
+        if File.directory?(path)
+          FileUtils.remove_dir(path)
+        end
+        Scan.cache[:result_bundle_path] = path
       end
       return Scan.cache[:result_bundle_path]
     end

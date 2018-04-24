@@ -1,5 +1,4 @@
 require 'plist'
-require 'terminal-table'
 
 module Fastlane
   module Actions
@@ -46,10 +45,10 @@ module Fastlane
             type = part.split('=')[1].split(':')[0]
             values['provisioning_type'] = type.downcase =~ /distribution/i ? "distribution" : "development"
           end
-          if part.start_with? "TeamIdentifier"
+          if part.start_with?("TeamIdentifier")
             values['team_identifier'] = part.split('=')[1]
           end
-          if part.start_with? "Identifier"
+          if part.start_with?("Identifier")
             values['bundle_identifier'] = part.split('=')[1]
           end
         end
@@ -66,6 +65,7 @@ module Fastlane
         values['app_name'] = plist['AppIDName']
         values['provisioning_uuid'] = plist['UUID']
         values['team_name'] = plist['TeamName']
+        values['team_identifier'] = plist['TeamIdentifier'].first
 
         application_identifier_prefix = plist['ApplicationIdentifierPrefix'][0]
         full_bundle_identifier = "#{application_identifier_prefix}.#{values['bundle_identifier']}"
@@ -77,28 +77,8 @@ module Fastlane
       end
 
       def self.print_values(values)
-        table = Terminal::Table.new do |t|
-          t.title = 'Summary for VERIFY_BUILD'.green
-          t.headings = 'Key', 'Value'
-          values.each do |key, value|
-            columns = []
-            columns << key
-            columns << case value
-                       when Hash
-                         value.map { |k, v| "#{k}: #{v}" }.join("\n")
-                       when Array
-                         value.join("\n")
-                       else
-                         value.to_s
-                       end
-
-            t << columns
-          end
-        end
-
-        puts ""
-        puts table
-        puts ""
+        FastlaneCore::PrintTable.print_values(config: values,
+                                             title: "Summary for verify_build #{Fastlane::VERSION}")
       end
 
       def self.evaulate(params, values)
@@ -121,7 +101,7 @@ module Fastlane
           UI.user_error!("Mismatched bundle_identifier. Required: '#{params[:bundle_identifier]}'; Found: '#{values['bundle_identifier']}'") unless params[:bundle_identifier] == values['bundle_identifier']
         end
 
-        UI.success "Build is verified, have a 🍪."
+        UI.success("Build is verified, have a 🍪.")
       end
 
       #####################################################
