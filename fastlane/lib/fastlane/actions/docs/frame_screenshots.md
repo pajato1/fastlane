@@ -71,15 +71,21 @@ Why should you have to use Photoshop, just to add a frame around your screenshot
 
 Just navigate to your folder of screenshots and use the following command:
 
-    fastlane frameit
+```no-highlight
+fastlane frameit
+```
 
 To use the silver version of the frames:
 
-    fastlane frameit silver
+```no-highlight
+fastlane frameit silver
+```
 
 To download the latest frames
 
-    fastlane frameit download_frames
+```no-highlight
+fastlane frameit download_frames
+```
 
 When using _frameit_ without titles on top, the screenshots will have the full resolution, which means they can't be uploaded to the App Store directly. They are supposed to be used for websites, print media and emails. Check out the section below to use the screenshots for the App Store.
 
@@ -146,6 +152,7 @@ The `keyword` and `title` parameters are both used in `default` and `data`. They
 | `text` | The text that should be used for the `keyword` or `title`. <p> Note: If you want to use localised text, use [`.strings` files](#strings-files). | NA |
 
 ### Example
+
 ```json
 {
   "device_frame_version": "latest",
@@ -203,8 +210,9 @@ To define the title and optionally the keyword, put two `.strings` files into th
 
 The `keyword.strings` and `title.strings` are standard `.strings` file you already use for your iOS apps, making it easy to use your existing translation service to get localized titles.
 
-**Notes** 
-- These `.strings` files **MUST** be utf-16 encoded (UTF-16 BE with BOM). They also must begin with an empty line. If you are having trouble see [issue #1740](https://github.com/fastlane/fastlane/issues/1740)
+**Notes**
+
+- These `.strings` files **MUST** be utf-8 (UTF-8) or utf-16 encoded (UTF-16 BE with BOM). They also must begin with an empty line. If you are having trouble see [issue #1740](https://github.com/fastlane/fastlane/issues/1740)
 - You **MUST** provide a background if you want titles. _frameit_ will not add the tiles if a background is not specified.
 
 # Mac
@@ -250,7 +258,7 @@ Check out [_snapshot_](https://docs.fastlane.tools/actions/snapshot/) to automat
 
 ## Upload screenshots
 
-Use [_deliver_](https://docs.fastlane.tools/actions/deliver/) to upload iOS screenshots to iTunes Connect, or [_supply_](https://docs.fastlane.tools/actions/supply/) to upload Android screenshots to Play Store completely automatically 🚀
+Use [_deliver_](https://docs.fastlane.tools/actions/deliver/) to upload iOS screenshots to App Store Connect, or [_supply_](https://docs.fastlane.tools/actions/supply/) to upload Android screenshots to Play Store completely automatically 🚀
 
 ## Alternative location to store device_frames
 
@@ -274,5 +282,6 @@ brew install imagemagick
 ```
 
 ## Uninstall
-- ```sudo gem uninstall fastlane```
-- ```rm -rf ~/.frameit```
+
+- `sudo gem uninstall fastlane`
+- `rm -rf ~/.frameit`

@@ -164,6 +164,17 @@ module Spaceship
         testers
       end
 
+      #####################################################
+      # @!Internal Testers
+      #####################################################
+      def internal_users(app_id: nil)
+        assert_required_params(__method__, binding)
+        url = "providers/#{team_id}/apps/#{app_id}/internalUsers"
+        r = request(:get, url)
+
+        parse_response(r, 'data')
+      end
+
       ##
       # @!group Testers API
       ##
@@ -199,6 +210,17 @@ module Spaceship
         assert_required_params(__method__, binding)
         url = "providers/#{team_id}/apps/#{app_id}/testers/#{tester_id}"
         response = request(:delete, url)
+        handle_response(response)
+      end
+
+      def remove_testers_from_testflight(app_id: nil, tester_ids: nil)
+        assert_required_params(__method__, binding)
+        url = "providers/#{team_id}/apps/#{app_id}/deleteTesters"
+        response = request(:post) do |req|
+          req.url(url)
+          req.body = tester_ids.map { |i| { "id" => i } }.to_json
+          req.headers['Content-Type'] = 'application/json'
+        end
         handle_response(response)
       end
 
@@ -261,6 +283,14 @@ module Spaceship
         handle_response(response)
       end
 
+      def builds_for_group(app_id: nil, group_id: nil)
+        assert_required_params(__method__, binding)
+
+        url = "providers/#{team_id}/apps/#{app_id}/groups/#{group_id}/builds"
+        response = request(:get, url)
+        handle_response(response)
+      end
+
       ##
       # @!group AppTestInfo
       ##
@@ -298,7 +328,7 @@ module Spaceship
 
         raise UnexpectedResponse, response.body['error'] if response.body['error']
 
-        raise UnexpectedResponse, "Temporary iTunes Connect error: #{response.body}" if response.body['statusCode'] == 'ERROR'
+        raise UnexpectedResponse, "Temporary App Store Connect error: #{response.body}" if response.body['statusCode'] == 'ERROR'
 
         return response.body['data'] if response.body['data']
 

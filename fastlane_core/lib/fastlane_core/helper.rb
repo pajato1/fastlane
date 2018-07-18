@@ -72,7 +72,7 @@ module FastlaneCore
     # @return [boolean] true if building in a known CI environment
     def self.ci?
       # Check for Jenkins, Travis CI, ... environment variables
-      ['JENKINS_HOME', 'JENKINS_URL', 'TRAVIS', 'CIRCLECI', 'CI', 'TEAMCITY_VERSION', 'GO_PIPELINE_NAME', 'bamboo_buildKey', 'GITLAB_CI', 'XCS'].each do |current|
+      ['JENKINS_HOME', 'JENKINS_URL', 'TRAVIS', 'CIRCLECI', 'CI', 'APPCENTER_BUILD_ID', 'TEAMCITY_VERSION', 'GO_PIPELINE_NAME', 'bamboo_buildKey', 'GITLAB_CI', 'XCS'].each do |current|
         return true if ENV.key?(current)
       end
       return false
@@ -264,6 +264,21 @@ module FastlaneCore
     # removes ANSI colors from string
     def self.strip_ansi_colors(str)
       str.gsub(/\e\[([;\d]+)?m/, '')
+    end
+
+    # Zips directory
+    def self.zip_directory(path, output_path, contents_only: false, print: true)
+      if contents_only
+        command = "cd '#{path}' && zip -r '#{output_path}' *"
+      else
+        containing_path = File.expand_path("..", path)
+        contents_path = File.basename(path)
+
+        command = "cd '#{containing_path}' && zip -r '#{output_path}' '#{contents_path}'"
+      end
+
+      UI.command(command) unless print
+      Helper.backticks(command, print: print)
     end
 
     # loading indicator

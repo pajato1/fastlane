@@ -11,7 +11,7 @@ Pilot makes it easier to manage your app on Apple’s TestFlight. You can:
 - Retrieve information about testers & devices
 - Import/export all available testers
 
-_pilot_ uses [spaceship.airforce](https://spaceship.airforce) to interact with iTunes Connect 🚀
+_pilot_ uses [spaceship.airforce](https://spaceship.airforce) to interact with App Store Connect 🚀
 
 -------
 
@@ -119,7 +119,7 @@ The output will look like this:
 
 ### Add a new tester
 
-To add a new tester to both your iTunes Connect account and to your app (if given), use the `pilot add` command. This will create a new tester (if necessary) or add an existing tester to the app to test.
+To add a new tester to both your App Store Connect account and to your app (if given), use the `pilot add` command. This will create a new tester (if necessary) or add an existing tester to the app to test.
 
 ```no-highlight
 fastlane pilot add email@invite.com
@@ -192,7 +192,9 @@ fastlane pilot import -c ~/Desktop/testers.csv
 
 If you run into any issues you can use the `verbose` mode to get a more detailed output:
 
-    fastlane pilot upload --verbose
+```no-highlight
+fastlane pilot upload --verbose
+```
 
 ## Firewall Issues
 

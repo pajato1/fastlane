@@ -136,13 +136,7 @@ module Fastlane
       end
 
       def self.details
-        [
-          "This action allows you to upload symbolication files to Crashlytics.",
-          "It's extra useful if you use it to download the latest dSYM files from Apple when you",
-          "use Bitcode. This action will not fail the build if one of the uploads failed.",
-          "The reason for that is that sometimes some of dSYM files are invalid, and we don't want",
-          "them to fail the complete build."
-        ].join(" ")
+        "This action allows you to upload symbolication files to Crashlytics. It's extra useful if you use it to download the latest dSYM files from Apple when you use Bitcode. This action will not fail the build if one of the uploads failed. The reason for that is that sometimes some of dSYM files are invalid, and we don't want them to fail the complete build."
       end
 
       def self.available_options
@@ -197,9 +191,7 @@ module Fastlane
                                        description: "The number of threads to use for simultaneous dSYM upload",
                                        verify_block: proc do |value|
                                          min_threads = 1
-                                         max_threads = 15
                                          UI.user_error!("Too few threads (#{value}) minimum number of threads: #{min_threads}") unless value >= min_threads
-                                         UI.user_error!("Too many threads (#{value}) maximum number of threads: #{max_threads}") unless value <= max_threads
                                        end)
         ]
       end

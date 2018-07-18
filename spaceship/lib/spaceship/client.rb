@@ -23,6 +23,7 @@ module Spaceship
   class Client
     PROTOCOL_VERSION = "QH65B2"
     USER_AGENT = "Spaceship #{Fastlane::VERSION}"
+    AUTH_TYPES = ["sa", "hsa", "non-sa", "hsa2"]
 
     attr_reader :client
 
@@ -39,8 +40,6 @@ module Spaceship
     attr_accessor :csrf_tokens
 
     attr_accessor :provider
-
-    attr_accessor :available_providers
 
     # legacy support
     BasicPreferredInfoError = Spaceship::BasicPreferredInfoError
@@ -191,6 +190,11 @@ module Spaceship
       teams.find do |t|
         t['teamId'] == team_id
       end
+    end
+
+    # @return (String) Fetches name from currently used team
+    def team_name
+      (team_information || {})['name']
     end
 
     # Instantiates a client but with a cookie derived from another client.
@@ -367,7 +371,7 @@ module Spaceship
       end
     end
 
-    # This method is used for both the Apple Dev Portal and iTunes Connect
+    # This method is used for both the Apple Dev Portal and App Store Connect
     # This will also handle 2 step verification
     def send_shared_login_request(user, password)
       # Check if we have a cached/valid session here
@@ -390,7 +394,7 @@ module Spaceship
           # As this will raise an exception if the old session has expired
           # If the old session is still valid, we don't have to do anything else in this method
           # that's why we return true
-          return true if fetch_olympus_session.count > 0
+          return true if fetch_olympus_session
         rescue
           # If the `fetch_olympus_session` method raises an exception
           # we'll land here, and therefore continue doing a full login process
@@ -462,8 +466,12 @@ module Spaceship
         if (response.body || "").include?('invalid="true"')
           # User Credentials are wrong
           raise InvalidUserCredentialsError.new, "Invalid username and password combination. Used '#{user}' as the username."
+        elsif response.status == 412 && AUTH_TYPES.include?(response.body["authType"])
+          # Need to acknowledge Apple ID and Privacy statement - https://github.com/fastlane/fastlane/issues/12577
+          # Looking for status of 412 might be enough but might be safer to keep looking only at what is being reported
+          raise AppleIDAndPrivacyAcknowledgementNeeded.new, "Need to acknowledge to Apple's Apple ID and Privacy statement. Please manually log into https://appleid.apple.com (or https://itunesconnect.apple.com) to acknowledge the statement."
         elsif (response['Set-Cookie'] || "").include?("itctx")
-          raise "Looks like your Apple ID is not enabled for iTunes Connect, make sure to be able to login online"
+          raise "Looks like your Apple ID is not enabled for App Store Connect, make sure to be able to login online"
         else
           info = [response.body, response['Set-Cookie']]
           raise Tunes::Error.new, info.join("\n")
@@ -483,14 +491,13 @@ module Spaceship
         end
 
         provider = body["provider"]
-        self.provider = Spaceship::Provider.new(provider_hash: provider) unless provider.nil?
-
-        available_providers_list = body["availableProviders"].compact
-
-        self.available_providers = available_providers_list.map do |provider_hash|
-          Spaceship::Provider.new(provider_hash: provider_hash)
+        if provider
+          self.provider = Spaceship::Provider.new(provider_hash: provider)
+          return true
         end
       end
+
+      return false
     end
 
     def itc_service_key
@@ -511,7 +518,7 @@ module Spaceship
       return @service_key
     rescue => ex
       puts(ex.to_s)
-      raise AppleTimeoutError.new, "Could not receive latest API key from iTunes Connect, this might be a server issue."
+      raise AppleTimeoutError.new, "Could not receive latest API key from App Store Connect, this might be a server issue."
     end
 
     #####################################################
@@ -612,7 +619,7 @@ module Spaceship
     end
 
     def detect_most_common_errors_and_raise_exceptions(body)
-      # Check if the failure is due to missing permissions (iTunes Connect)
+      # Check if the failure is due to missing permissions (App Store Connect)
       if body["messages"] && body["messages"]["error"].include?("Forbidden")
         raise_insuffient_permission_error!
       elsif body["messages"] && body["messages"]["error"].include?("insufficient privileges")
@@ -620,7 +627,7 @@ module Spaceship
         # With the default location the error would say that `parse_response` is the caller
         raise_insuffient_permission_error!(caller_location: 3)
       elsif body.to_s.include?("Internal Server Error - Read")
-        raise InternalServerError, "Received an internal server error from iTunes Connect / Developer Portal, please try again later"
+        raise InternalServerError, "Received an internal server error from App Store Connect / Developer Portal, please try again later"
       elsif (body["resultString"] || "").include?("Program License Agreement")
         raise ProgramLicenseAgreementUpdated, "#{body['userString']} Please manually log into your Apple Developer account to review and accept the updated agreement."
       end

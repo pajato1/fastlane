@@ -69,9 +69,11 @@ module Fastlane
         end
 
         def details
-          "Calls any GitHub API endpoint. You must provide your GitHub Personal token (get one from https://github.com/settings/tokens/new).
-          Out parameters provide the status code and the full response JSON if valid, otherwise the raw response body.
-          Documentation: https://developer.github.com/v3"
+          [
+            "Calls any GitHub API endpoint. You must provide your GitHub Personal token (get one from [https://github.com/settings/tokens/new](https://github.com/settings/tokens/new)).",
+            "Out parameters provide the status code and the full response JSON if valid, otherwise the raw response body.",
+            "Documentation: [https://developer.github.com/v3](https://developer.github.com/v3)."
+          ].join("\n")
         end
 
         def available_options
@@ -221,6 +223,8 @@ module Fastlane
           if raw_body
             raw_body
           elsif body.kind_of?(Hash)
+            body.to_json
+          elsif body.kind_of?(Array)
             body.to_json
           else
             UI.user_error!("Please provide valid JSON, or a hash as request body") unless parse_json(body)

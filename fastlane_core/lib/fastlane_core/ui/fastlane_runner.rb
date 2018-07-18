@@ -68,9 +68,8 @@ module Commander
           FastlaneCore::UI.user_error!("fastlane requires a minimum version of Xcode #{Fastlane::MINIMUM_XCODE_RELEASE}, please upgrade and make sure to use `sudo xcode-select -s /Applications/Xcode.app`")
         end
 
-        # https://github.com/fastlane/fastlane/issues/11913
-        # action_launch_context = FastlaneCore::ActionLaunchContext.context_for_action_name(@program[:name], args: ARGV)
-        # FastlaneCore.session.action_launched(launch_context: action_launch_context)
+        action_launch_context = FastlaneCore::ActionLaunchContext.context_for_action_name(@program[:name], args: ARGV)
+        FastlaneCore.session.action_launched(launch_context: action_launch_context)
 
         return_value = run_active_command
 
@@ -90,7 +89,7 @@ module Commander
           raise e
         else
           action_completed(@program[:name], status: FastlaneCore::ActionCompletionStatus::INTERRUPTED, exception: e)
-          puts("\nCancelled... use --verbose to show the stack trace")
+          abort("\nCancelled... use --verbose to show the stack trace")
         end
       rescue \
         OptionParser::InvalidOption,
@@ -128,9 +127,8 @@ module Commander
         rescue_connection_failed_error(e)
       rescue => e # high chance this is actually FastlaneCore::Interface::FastlaneCrash, but can be anything else
         rescue_unknown_error(e)
-        # https://github.com/fastlane/fastlane/issues/11913
-        # ensure
-        #   FastlaneCore.session.finalize_session
+      ensure
+        FastlaneCore.session.finalize_session
       end
     end
 
@@ -173,7 +171,7 @@ module Commander
     end
 
     def handle_tls_error!(e)
-      # Apple has upgraded its iTunes Connect servers to require TLS 1.2, but
+      # Apple has upgraded its App Store Connect servers to require TLS 1.2, but
       # system Ruby 2.0 does not support it. We want to suggest that users upgrade
       # their Ruby version
       suggest_ruby_reinstall(e)
@@ -269,7 +267,8 @@ module Commander
     end
 
     def reraise_formatted!(e, message)
-      raise e, "[!] #{message}".red, e.backtrace
+      backtrace = FastlaneCore::Env.truthy?("FASTLANE_HIDE_BACKTRACE") ? [] : e.backtrace
+      raise e, "[!] #{message}".red, backtrace
     end
 
     def show_github_issues(message_or_error)
