@@ -29,7 +29,7 @@ module Frameit
         return
       end
 
-      if should_add_title?
+      if complex_frame?
         @image = complex_framing
       else
         # easy mode from 1.0 - no title or background
@@ -73,7 +73,7 @@ module Frameit
       @image.rotate(-rotation)
 
       @image = frame.composite(image, "png") do |c|
-        c.compose("DstOver")
+        c.compose("Over")
         c.geometry(offset['offset'])
       end
 
@@ -111,8 +111,8 @@ module Frameit
     end
 
     # Do we add a background and title as well?
-    def should_add_title?
-      return (fetch_config['background'] and (fetch_config['title'] or fetch_config['keyword']))
+    def complex_frame?
+      return (fetch_config['background'] or fetch_config['background_color'] or fetch_config['title'] or fetch_config['keyword'])
     end
 
     # more complex mode: background, frame and title
@@ -182,11 +182,21 @@ module Frameit
 
     # Returns a correctly sized background image
     def generate_background
-      background = MiniMagick::Image.open(fetch_config['background'])
 
-      if background.height != screenshot.size[1]
-        background.resize("#{screenshot.size[0]}x#{screenshot.size[1]}^") # `^` says it should fill area
-        background.merge!(["-gravity", "center", "-crop", "#{screenshot.size[0]}x#{screenshot.size[1]}+0+0"]) # crop from center
+      if fetch_config['background']
+        background = MiniMagick::Image.open(fetch_config['background'])
+
+        if background.height != screenshot.size[1]
+          background.resize("#{screenshot.size[0]}x#{screenshot.size[1]}^") # `^` says it should fill area
+          background.merge!(["-gravity", "center", "-crop", "#{screenshot.size[0]}x#{screenshot.size[1]}+0+0"]) # crop from center
+        end
+      elsif fetch_config['background_color']
+        MiniMagick::Tool::Convert.new do |i|
+          i.size screenshot.size[0].to_s + "x" + screenshot.size[1].to_s
+          i.xc fetch_config['background_color']
+          i << "/tmp/background.jpg"
+        end
+        background = MiniMagick::Image.open("/tmp/background.jpg")
       end
       background
     end
@@ -426,9 +436,12 @@ module Frameit
     # Don't use this method to access the actual text and use `fetch_texts` instead
     def fetch_config
       return @config if @config
-
       config_path = File.join(File.expand_path("..", screenshot.path), "Framefile.json")
       config_path = File.join(File.expand_path("../..", screenshot.path), "Framefile.json") unless File.exist?(config_path)
+      config_path = File.join(File.expand_path("../../..", screenshot.path), "Framefile.json") unless File.exist?(config_path)
+      config_path = File.join(File.expand_path("../../../..", screenshot.path), "Framefile.json") unless File.exist?(config_path)
+      config_path = File.join(File.expand_path("../../../../..", screenshot.path), "Framefile.json") unless File.exist?(config_path)
+      config_path = File.join(File.expand_path("../../../../../..", screenshot.path), "Framefile.json") unless File.exist?(config_path)
       file = ConfigParser.new.load(config_path)
       return {} unless file # no config file at all
       @config = file.fetch_value(screenshot.path)

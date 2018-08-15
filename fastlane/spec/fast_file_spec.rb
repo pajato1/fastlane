@@ -135,11 +135,6 @@ describe Fastlane do
         expect(Fastlane::Actions.lane_context[Fastlane::Actions::SharedValues::LANE_NAME]).to eq("anotherroot")
         expect(Fastlane::Actions.lane_context[Fastlane::Actions::SharedValues::PLATFORM_NAME]).to eq(nil)
       end
-
-      it "logs a warning if and unsupported action is called on an non officially supported platform" do
-        expect(FastlaneCore::UI).to receive(:important).with("Action 'frameit' isn't known to support operating system 'android'.")
-        @ff.runner.execute('unsupported_action', 'android')
-      end
     end
 
     describe "Different Fastfiles" do

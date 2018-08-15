@@ -43,6 +43,8 @@ module Deliver
       MAC = "Mac"
       # Apple TV
       APPLE_TV = "Apple-TV"
+      # Android Nexus 5X
+      ANDROID_NEXUS_5X = "Android-Nexus-5X"
       # Android Nexus 6P
       ANDROID_NEXUS_6P = "Android-Nexus-6P"
       # Android Nexus 7
@@ -100,6 +102,7 @@ module Deliver
         ScreenSize::MAC => "desktop",
         ScreenSize::IOS_APPLE_WATCH => "watch",
         ScreenSize::APPLE_TV => "appleTV",
+        ScreenSize::ANDROID_NEXUS_5X => "Nexus 5X",
         ScreenSize::ANDROID_NEXUS_6P => "Nexus 6P",
         ScreenSize::ANDROID_NEXUS_7 => "Nexus 7",
         ScreenSize::ANDROID_NEXUS_9 => "Nexus 9",
@@ -242,6 +245,10 @@ module Deliver
           [312, 390]
         ],
         ScreenSize::APPLE_TV => [
+          [1920, 1080]
+        ],
+        ScreenSize::ANDROID_NEXUS_5X => [
+          [1080, 1920],
           [1920, 1080]
         ],
         ScreenSize::ANDROID_NEXUS_6P => [

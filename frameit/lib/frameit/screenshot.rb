@@ -51,6 +51,8 @@ module Frameit
         return 'MacBook'
       when sizes::ANDROID_GALAXY_S6
         return 'Galaxy_S6'
+      when sizes::ANDROID_NEXUS_5X
+        return 'Nexus_5X'
       when sizes::ANDROID_NEXUS_6P
         return 'Nexus_6P'
       when sizes::ANDROID_NEXUS_7
