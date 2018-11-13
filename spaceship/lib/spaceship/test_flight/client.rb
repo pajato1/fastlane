@@ -15,7 +15,7 @@ module Spaceship
       # Each request method should make only one request. For more high-level logic, put code in the data models.
 
       def self.hostname
-        'https://itunesconnect.apple.com/testflight/v2/'
+        'https://appstoreconnect.apple.com/testflight/v2/'
       end
 
       ##
@@ -112,6 +112,10 @@ module Spaceship
           req.body = body.to_json
           req.headers['Content-Type'] = 'application/json'
         end
+
+        # This is invalid now.
+        @cached_groups.delete(app_id) if @cached_groups
+
         handle_response(response)
       end
 
