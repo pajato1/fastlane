@@ -38,7 +38,7 @@ module Frameit
           Helper.show_loading_indicator("Framing screenshot '#{full_path}'")
 
           begin
-            screenshot = Screenshot.new(full_path, color)
+            screenshot = Screenshot.new(File.absolute_path(full_path, path), color)
             screenshot.frame!
           rescue => ex
             UI.error(ex.to_s)

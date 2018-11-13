@@ -63,6 +63,8 @@ module Deliver
       ANDROID_GALAXY_S6 = "Samsung-Galaxy-S6"
       # Samsung Galaxy S
       ANDROID_GALAXY_S7 = "Samsung-Galaxy-S7"
+      # Android Pixel 2 XL
+      ANDROID_PIXEL_2XL = "Android-Pixel-2XL"
     end
 
     # @return [Deliver::ScreenSize] the screen size (device type)
@@ -117,7 +119,8 @@ module Deliver
         ScreenSize::ANDROID_NEXUS_9 => "Nexus 9",
         ScreenSize::ANDROID_NEXUS_10 => "Nexus 10",
         ScreenSize::ANDROID_GALAXY_S6 => "Galaxy S6 Black",
-        ScreenSize::ANDROID_GALAXY_S7 => "Galaxy S7 Black"
+        ScreenSize::ANDROID_GALAXY_S7 => "Galaxy S7 Black",
+        ScreenSize::ANDROID_PIXEL_2XL => "Pixel 2XL"
       }
       return matching[self.screen_size]
     end
@@ -296,6 +299,10 @@ module Deliver
         ScreenSize::ANDROID_GALAXY_S7 => [
           [1442, 2562],
           [2562, 1442]
+        ],
+        ScreenSize::ANDROID_PIXEL_2XL => [
+          [1440, 2880],
+          [2880, 1440]
         ]
       }
     end

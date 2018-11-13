@@ -150,6 +150,7 @@ module Frameit
         else
           # the screenshot size is only limited by width.
           # If higher than the frame, the screenshot is cut off at the bottom
+          UI.verbose("frame width: #{frame_width}, image width: #{image.width}")
           @image.resize("#{frame_width}x") if frame_width < @image.width
         end
       end
@@ -241,7 +242,27 @@ module Frameit
 
       @image = background.composite(image, "png") do |c|
         c.compose("Over")
-        c.geometry("+#{left_space}+#{device_top(background)}")
+        if title_below_image
+          show_complete_frame = fetch_config['show_complete_frame']
+          c.geometry("+#{left_space}+#{background.height - image.height - space_to_device}") unless show_complete_frame
+          c.geometry("+#{left_space}+#{vertical_frame_padding}") if show_complete_frame
+        else
+          # This only works if you specify the screenshots directory.
+          curLocale = self.screenshot.path.split(File::SEPARATOR).fetch(-4)
+          UI.verbose("put_device_into_background curLocale=#{curLocale}")
+          device_top_locale_string = "device_top_#{curLocale}"
+          device_top = fetch_config[device_top_locale_string]
+          UI.verbose("**** #{device_top_locale_string}=#{device_top}")
+          if device_top == nil
+            device_top = fetch_config['device_top']
+            UI.verbose("**** device_top=#{device_top}")
+          end
+          if device_top == nil
+            c.geometry("+#{left_space}+#{space_to_device}")
+          else
+            c.geometry("+#{left_space}+#{device_top}")
+          end
+        end
       end
 
       return image
@@ -304,6 +325,10 @@ module Frameit
       keyword = text_images[:keyword]
       title = text_images[:title]
 
+      if title.nil? || title.width == 0
+        return background
+      end
+
       if stack_title && !keyword.nil? && !title.nil? && keyword.width > 0 && title.width > 0
         background = put_title_into_background_stacked(background, title, keyword)
         return background
@@ -318,7 +343,9 @@ module Frameit
       # Resize the 2 labels if they exceed the available space either horizontally or vertically:
       image_scale_factor = 1.0 # default
       ratio_horizontal = sum_width / (image.width.to_f - horizontal_frame_padding * 2) # The fraction of the text images compared to the left and right padding
-      ratio_vertical = title.height.to_f / actual_font_size # The fraction of the actual height of the images compared to the available space
+      UI.verbose("ratio_horizontal: #{ratio_horizontal}")
+      ratio_vertical = 1.0 #title.height.to_f / actual_font_size # The fraction of the actual height of the images compared to the available space
+      UI.verbose("ratio_vertical: #{ratio_vertical}")
       if ratio_horizontal > 1.0 || ratio_vertical > 1.0
         # If either is too large, resize with the maximum ratio:
         image_scale_factor = (1.0 / [ratio_horizontal, ratio_vertical].max)
@@ -331,9 +358,10 @@ module Frameit
       end
 
       vertical_padding = vertical_frame_padding # assign padding to variable
+      top_space = vertical_padding + (title.height.to_f - title.height) / 2
       left_space = (background.width / 2.0 - sum_width / 2.0).round
 
-      self.space_to_device += actual_font_size + vertical_padding
+      self.space_to_device += title.height.to_f + vertical_padding
 
       if title_below_image
         title_top = background.height - effective_text_height / 2 - title.height / 2
@@ -354,7 +382,15 @@ module Frameit
       # Then, put the title on top of the screenshot next to the keyword
       background = background.composite(title, "png") do |c|
         c.compose("Over")
-        c.geometry("+#{left_space}+#{title_top}")
+        title_left_space = fetch_config['title_left_space']
+        title_top_space = fetch_config['title_top_space']
+        if title_left_space && title_top_space
+          c.geometry("+#{title_left_space}+#{title_top_space}")
+        elsif title_below_image
+          c.geometry("+#{left_space}+#{background.height - space_to_device + top_space}")
+        else
+          c.geometry("+#{left_space}+#{top_space}")
+        end
       end
       background
     end
@@ -395,6 +431,10 @@ module Frameit
         text.gsub!('\n', "\n")
         text.gsub!(/(?<!\\)(')/) { |s| "\\#{s}" } # escape unescaped apostrophes with a backslash
 
+        # reshape text ( to fix Arabic issue similar to this issue #7522 )
+        bidi = Bidi.new
+        text_reshaped = bidi.to_visual reshape "#{text}"
+
         interline_spacing = fetch_config['interline_spacing']
 
         # Add the actual title
@@ -402,7 +442,7 @@ module Frameit
           i.font(current_font) if current_font
           i.gravity("Center")
           i.pointsize(actual_font_size)
-          i.draw("text 0,0 '#{text}'")
+          i.draw "text 0,0 '#{text_reshaped}'"
           i.interline_spacing(interline_spacing) if interline_spacing
           i.fill(fetch_config[key.to_s]['color'])
         end
@@ -487,9 +527,12 @@ module Frameit
 
       # Try to get it from a keyword.strings or title.strings file
       strings_path = File.join(File.expand_path("..", screenshot.path), "#{type}.strings")
+      strings_path = File.join(File.expand_path("../..", screenshot.path), "#{type}.strings") unless File.exist?(strings_path)
+      strings_path = File.join(File.expand_path("../../..", screenshot.path), "#{type}.strings") unless File.exist?(strings_path)
+
       if File.exist?(strings_path)
         parsed = StringsParser.parse(strings_path)
-        text_array = parsed.find { |k, v| screenshot.path.upcase.include?(k.upcase) }
+        text_array = parsed.find { |k, v| File.basename(screenshot.path).upcase.include?(k.upcase) }
         return text_array.last if text_array && text_array.last.length > 0 # Ignore empty string
       end
 
@@ -500,7 +543,7 @@ module Frameit
 
       if type == :title && !text
         # title is mandatory
-        UI.user_error!("Could not get title for screenshot #{screenshot.path}. Please provide one in your Framefile.json or title.strings")
+        UI.verbose("Could not get title for screenshot #{screenshot.path}. Please provide one in your Framefile.json or title.strings")
       end
 
       return text
@@ -527,16 +570,33 @@ module Frameit
       return single_font if single_font
 
       fonts = fetch_config[key.to_s]['fonts']
+
       if fonts
-        fonts.each do |font|
-          if font['supported']
-            font['supported'].each do |language|
-              if screenshot.path.include?(language)
-                return font["font"]
+        UI.verbose("path=#{screenshot.path}")
+
+        screenshot.path.split(File::SEPARATOR).reverse.each do |dir|
+          # short circuit if we reach the fastlane directory
+          if dir == "fastlane"
+            break
+          end
+
+          fonts.each do |font|
+            if font['supported']
+              font['supported'].each do |language|
+                if dir == language
+                  return font["font"]
+                end
               end
             end
-          else
-            # No `supported` array, this will always be true
+          end
+        end
+
+        # Look for a font with no `supported` array
+        UI.verbose("#{fonts}")
+        fonts.each do |font|
+          UI.verbose("#{font['font']}")
+          UI.verbose("#{font['supported']}")
+          if not font['supported']
             UI.verbose("Found a font with no list of supported languages, using this now")
             return font["font"]
           end

@@ -65,6 +65,8 @@ module Frameit
         return 'Galaxy_S6'
       when sizes::ANDROID_GALAXY_S7
         return 'Galaxy_S7'
+      when sizes::ANDROID_PIXEL_2XL
+        return 'Pixel_2XL'
       else
         UI.error("Unknown device type for size #{@screen_size} for path '#{path}'")
       end

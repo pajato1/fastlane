@@ -11,3 +11,6 @@ require 'frameit/mac_editor'
 require 'frameit/dependency_checker'
 require 'frameit/options'
 require 'frameit/trim_box'
+# arabic reshaper
+require 'bidi'
+require 'frameit/reshaper'
