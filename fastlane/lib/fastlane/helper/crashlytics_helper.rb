@@ -7,7 +7,7 @@ module Fastlane
         def discover_crashlytics_path(params)
           path = params[:crashlytics_path]
 
-          # Finding submit binary inside of given Crashlytics path (for backwards compatability)
+          # Finding submit binary inside of given Crashlytics path (for backwards compatibility)
           if path
             if File.basename(path) != "submit"
               path = Dir[File.join(path, '**', 'submit')].last
@@ -24,7 +24,8 @@ module Fastlane
           path ||= Dir["./Pods/iOS/Crashlytics/Crashlytics.framework/submit"].last
           path ||= Dir["./**/Crashlytics.framework/submit"].last
 
-          if path && path.downcase.include?("crashlytics.framework")
+          downcase_path = path ? path.downcase : nil
+          if downcase_path && downcase_path.include?("pods") && downcase_path.include?("crashlytics.framework")
             UI.deprecated("Crashlytics has moved the submit binary outside of Crashlytics.framework directory as of 3.4.1. Please change :crashlytics_path to `<PODS_ROOT>/Crashlytics/submit`")
           end
 
@@ -55,13 +56,7 @@ module Fastlane
           return command
         end
 
-        def generate_android_command(params)
-          # We have to generate an empty XML file to make the crashlytics CLI happy :)
-          require 'tempfile'
-          xml = Tempfile.new('xml')
-          xml.write('<?xml version="1.0" encoding="utf-8"?><manifest></manifest>')
-          xml.close
-
+        def generate_android_command(params, android_manifest_path)
           params[:crashlytics_path] = download_android_tools unless params[:crashlytics_path]
 
           UI.user_error!("The `crashlytics_path` must be a jar file for Android") unless params[:crashlytics_path].end_with?(".jar") || Helper.test?
@@ -75,13 +70,13 @@ module Fastlane
           command << "-androidRes ."
           command << "-apiKey #{params[:api_token]}"
           command << "-apiSecret #{params[:build_secret]}"
-          command << "-uploadDist '#{File.expand_path(params[:apk_path])}'"
-          command << "-androidManifest '#{xml.path}'"
+          command << "-uploadDist #{File.expand_path(params[:apk_path]).shellescape}"
+          command << "-androidManifest #{File.expand_path(android_manifest_path).shellescape}"
 
           # Optional
-          command << "-betaDistributionEmails '#{params[:emails]}'" if params[:emails]
-          command << "-betaDistributionReleaseNotesFilePath '#{File.expand_path(params[:notes_path])}'" if params[:notes_path]
-          command << "-betaDistributionGroupAliases '#{params[:groups]}'" if params[:groups]
+          command << "-betaDistributionEmails #{params[:emails].shellescape}" if params[:emails]
+          command << "-betaDistributionReleaseNotesFilePath #{File.expand_path(params[:notes_path]).shellescape}" if params[:notes_path]
+          command << "-betaDistributionGroupAliases #{params[:groups].shellescape}" if params[:groups]
           command << "-betaDistributionNotifications #{(params[:notifications] ? 'true' : 'false')}"
 
           return command
@@ -91,7 +86,6 @@ module Fastlane
           containing = File.join(File.expand_path("~/Library"), "CrashlyticsAndroid")
           zip_path = File.join(containing, "crashlytics-devtools.zip")
           jar_path = File.join(containing, "crashlytics-devtools.jar")
-          return jar_path if File.exist?(jar_path)
 
           url = "https://ssl-download-crashlytics-com.s3.amazonaws.com/android/ant/crashlytics.zip"
           require 'net/http'
@@ -99,19 +93,26 @@ module Fastlane
           FileUtils.mkdir_p(containing)
 
           begin
-            UI.important("Downloading Crashlytics Support Library - this might take a minute...")
-
             # Work around ruby defect, where HTTP#get_response and HTTP#post_form don't use ENV proxy settings
             # https://bugs.ruby-lang.org/issues/12724
             uri = URI(url)
             http_conn = Net::HTTP.new(uri.host, uri.port)
             http_conn.use_ssl = true
+            result = http_conn.request_head(uri.path)
+
+            # ETag is returned with quotes, which net/http does not handle. Clean that up
+            etag = result['ETag'] && result['ETag'].tr('"', '')
+
+            # This is a no-op if the current version on disk matches the file on S3
+            return jar_path if File.exist?(zip_path) && etag == Digest::MD5.file(zip_path).hexdigest
+
+            UI.important("Downloading Crashlytics Support Library - this might take a minute...")
             result = http_conn.request_get(uri.path)
             UI.error!("#{result.message} (#{result.code})") unless result.kind_of?(Net::HTTPSuccess)
             File.write(zip_path, result.body)
 
             # Now unzip the file
-            Action.sh("unzip '#{zip_path}' -d '#{containing}'")
+            Action.sh("unzip -o '#{zip_path}' -d '#{containing}'")
 
             UI.user_error!("Couldn't find 'crashlytics-devtools.jar'") unless File.exist?(jar_path)
 
@@ -121,6 +122,11 @@ module Fastlane
           end
 
           return jar_path
+        end
+
+        def generate_android_manifest_tempfile
+          # We have to generate an empty XML file to make the crashlytics CLI happy :)
+          write_to_tempfile('<?xml version="1.0" encoding="utf-8"?><manifest></manifest>', 'xml')
         end
 
         def write_to_tempfile(value, tempfilename)

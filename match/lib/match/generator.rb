@@ -15,6 +15,7 @@ module Match
         force: true, # we don't need a certificate without its private key, we only care about a new certificate
         username: params[:username],
         team_id: params[:team_id],
+        team_name: params[:team_name],
         keychain_path: FastlaneCore::Helper.keychain_path(params[:keychain_name]),
         keychain_password: params[:keychain_password]
       })
@@ -40,7 +41,7 @@ module Match
     end
 
     # @return (String) The UUID of the newly generated profile
-    def self.generate_provisioning_profile(params: nil, prov_type: nil, certificate_id: nil, app_identifier: nil, working_directory: nil)
+    def self.generate_provisioning_profile(params: nil, prov_type: nil, certificate_id: nil, app_identifier: nil, force: true, working_directory: nil)
       require 'sigh/manager'
       require 'sigh/options'
 
@@ -58,11 +59,12 @@ module Match
         app_identifier: app_identifier,
         output_path: File.join(working_directory, "profiles", prov_type.to_s),
         username: params[:username],
-        force: true,
+        force: force,
         cert_id: certificate_id,
         provisioning_name: profile_name,
         ignore_profiles_with_different_name: true,
         team_id: params[:team_id],
+        team_name: params[:team_name],
         template_name: params[:template_name]
       }
 

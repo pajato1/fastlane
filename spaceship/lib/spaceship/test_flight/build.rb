@@ -6,6 +6,8 @@ require_relative 'export_compliance'
 require_relative 'beta_review_info'
 require_relative 'build_trains'
 
+require_relative '../connect_api'
+
 module Spaceship
   module TestFlight
     class Build < Base
@@ -214,7 +216,8 @@ module Spaceship
       def submit_for_testflight_review!
         return if ready_to_test?
         return if approved?
-        client.post_for_testflight_review(app_id: app_id, build_id: id, build: self)
+
+        Spaceship::ConnectAPI.post_beta_app_review_submissions(build_id: id)
       end
 
       def expire!
@@ -223,6 +226,16 @@ module Spaceship
 
       def add_group!(group)
         client.add_group_to_build(app_id: app_id, group_id: group.id, build_id: id)
+      end
+
+      # Bridges the TestFlight::Build to the App Store Connect API build
+      def find_app_store_connect_build
+        builds = Spaceship::ConnectAPI::Build.all(
+          app_id: app_id,
+          version: self.train_version,
+          build_number: self.build_version
+        )
+        return builds.find { |build| build.id == id }
       end
     end
   end

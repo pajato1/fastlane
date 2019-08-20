@@ -17,8 +17,17 @@ module Fastlane
         end
 
         target_dictionary = project.targets.map { |f| { name: f.name, uuid: f.uuid, build_configuration_list: f.build_configuration_list } }
+        target_attributes = project.root_object.attributes["TargetAttributes"]
         changed_targets = []
-        project.root_object.attributes["TargetAttributes"].each do |target, sett|
+
+        # make sure TargetAttributes exist for all targets
+        target_dictionary.each do |props|
+          unless target_attributes.key?(props[:uuid])
+            target_attributes[props[:uuid]] = {}
+          end
+        end
+
+        target_attributes.each do |target, sett|
           found_target = target_dictionary.detect { |h| h[:uuid] == target }
           if params[:targets]
             # get target name
@@ -41,7 +50,7 @@ module Fastlane
           if params[:code_sign_identity]
             build_configuration_list.set_setting("CODE_SIGN_IDENTITY", params[:code_sign_identity])
 
-            # We also need to update the value if it was overriden for a specific SDK
+            # We also need to update the value if it was overridden for a specific SDK
             build_configuration_list.build_configurations.each do |build_configuration|
               codesign_build_settings_keys = build_configuration.build_settings.keys.select { |key| key.to_s.match(/CODE_SIGN_IDENTITY.*/) }
               codesign_build_settings_keys.each do |setting|

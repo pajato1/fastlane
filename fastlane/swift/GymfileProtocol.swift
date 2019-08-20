@@ -20,6 +20,7 @@ protocol GymfileProtocol: class {
   var archivePath: String? { get }
   var derivedDataPath: String? { get }
   var resultBundle: Bool { get }
+  var resultBundlePath: String? { get }
   var buildlogPath: String { get }
   var sdk: String? { get }
   var toolchain: String? { get }
@@ -27,7 +28,7 @@ protocol GymfileProtocol: class {
   var exportTeamId: String? { get }
   var xcargs: String? { get }
   var xcconfig: String? { get }
-  var suppressXcodeOutput: String? { get }
+  var suppressXcodeOutput: Bool? { get }
   var disableXcpretty: String? { get }
   var xcprettyTestFormat: String? { get }
   var xcprettyFormatter: String? { get }
@@ -61,6 +62,7 @@ extension GymfileProtocol {
   var archivePath: String? { return nil }
   var derivedDataPath: String? { return nil }
   var resultBundle: Bool { return false }
+  var resultBundlePath: String? { return nil }
   var buildlogPath: String { return "~/Library/Logs/gym" }
   var sdk: String? { return nil }
   var toolchain: String? { return nil }
@@ -68,7 +70,7 @@ extension GymfileProtocol {
   var exportTeamId: String? { return nil }
   var xcargs: String? { return nil }
   var xcconfig: String? { return nil }
-  var suppressXcodeOutput: String? { return nil }
+  var suppressXcodeOutput: Bool? { return nil }
   var disableXcpretty: String? { return nil }
   var xcprettyTestFormat: String? { return nil }
   var xcprettyFormatter: String? { return nil }
@@ -82,4 +84,4 @@ extension GymfileProtocol {
 
 // Please don't remove the lines below
 // They are used to detect outdated files
-// FastlaneRunnerAPIVersion [0.9.2]
+// FastlaneRunnerAPIVersion [0.9.4]

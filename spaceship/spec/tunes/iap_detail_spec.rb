@@ -1,4 +1,5 @@
 describe Spaceship::Tunes::IAPDetail do
+  before { TunesStubbing.itc_stub_iap }
   before { Spaceship::Tunes.login }
   let(:client) { Spaceship::Application.client }
   let(:app) { Spaceship::Application.all.first }
@@ -33,7 +34,7 @@ describe Spaceship::Tunes::IAPDetail do
       context "when iap is not cleared for sale yet" do
         before { allow(detailed).to receive(:cleared_for_sale).and_return(false) }
 
-        it "retuns an empty array" do
+        it "returns an empty array" do
           expect(subject).to eq([])
         end
       end
